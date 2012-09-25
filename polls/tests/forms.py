@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.forms import ValidationError
 from polls.forms import PollForm
 from polls.models import Poll
 
@@ -34,14 +35,19 @@ class PollFormTestCase(TestCase):
         self.assertEqual(self.poll_1.choice_set.get(pk=1).votes, 1)
         self.assertEqual(self.poll_1.choice_set.get(pk=2).votes, 0)
 
-        # Test the first choice.
+        # Test non-validate form error.
         form_1 = PollForm({'choice': 1}, instance=self.poll_1)
+        self.assertRaises(ValidationError, form_1.save)
+
+        # Test the first choice.
+        self.assertTrue(form_1.is_valid())
         form_1.save()
         self.assertEqual(self.poll_1.choice_set.get(pk=1).votes, 2)
         self.assertEqual(self.poll_1.choice_set.get(pk=2).votes, 0)
 
         # Test the second choice.
         form_2 = PollForm({'choice': 2}, instance=self.poll_1)
+        self.assertTrue(form_2.is_valid())
         form_2.save()
         self.assertEqual(self.poll_1.choice_set.get(pk=1).votes, 2)
         self.assertEqual(self.poll_1.choice_set.get(pk=2).votes, 1)
@@ -52,6 +58,7 @@ class PollFormTestCase(TestCase):
         self.assertEqual(self.poll_2.choice_set.get(pk=5).votes, 0)
 
         form_3 = PollForm({'choice': 5}, instance=self.poll_2)
+        self.assertTrue(form_3.is_valid())
         form_3.save()
         self.assertEqual(self.poll_2.choice_set.get(pk=3).votes, 1)
         self.assertEqual(self.poll_2.choice_set.get(pk=4).votes, 0)
